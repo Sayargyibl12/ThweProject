@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Princess</title>
+
+  <style>
+    :root{
+      --bg1:#070513;
+      --bg2:#101a3a;
+      --glass: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.18);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --pink:#ff4fd8;
+      --cyan:#66f0ff;
+      --gold:#ffd166;
+      --shadow: 0 30px 80px rgba(0,0,0,.5);
+    }
+
+    *{box-sizing:border-box; margin:0; padding:0}
+    html,body{height:100%}
+
+    body{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background:
+        radial-gradient(900px 700px at 15% 10%, rgba(102,240,255,.18), transparent 55%),
+        radial-gradient(900px 650px at 85% 15%, rgba(255,79,216,.16), transparent 60%),
+        radial-gradient(900px 650px at 50% 90%, rgba(255,209,102,.14), transparent 60%),
+        linear-gradient(120deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+
+    /* Soft animated wash */
+    .wash{
+      position:fixed; inset:-25%;
+      background: conic-gradient(from 180deg,
+        rgba(255,79,216,.14),
+        rgba(102,240,255,.14),
+        rgba(255,209,102,.10),
+        rgba(255,79,216,.14)
+      );
+      filter: blur(70px);
+      animation: spin 18s linear infinite;
+      opacity:.75;
+      pointer-events:none;
+      z-index:0;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Floating spark particles in background (CSS only) */
+    .sparks{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:0;
+      opacity:.9;
+    }
+    .spark{
+      position:absolute;
+      width:6px; height:6px;
+      border-radius:50%;
+      background: radial-gradient(circle, rgba(255,255,255,.9), rgba(255,255,255,0) 60%);
+      filter: drop-shadow(0 0 12px rgba(102,240,255,.35));
+      animation: floatUp linear infinite;
+      opacity:.55;
+    }
+    @keyframes floatUp{
+      from{ transform: translateY(110vh) scale(.8); opacity:.0;}
+      10%{opacity:.55}
+      to{ transform: translateY(-20vh) scale(1.25); opacity:0}
+    }
+
+    /* Card */
+    .card{
+      position:relative;
+      width:min(820px, 92vw);
+      height: min(420px, 72vh);
+      border-radius: 26px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+      box-shadow: var(--shadow);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+      z-index:2;
+      transform-style: preserve-3d;
+      transition: transform .25s ease;
+      display:flex;
+      align-items:stretch;
+    }
+
+    /* Glow edge + sweep */
+    .card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 260px at 15% 10%, rgba(102,240,255,.18), transparent 60%),
+        radial-gradient(700px 260px at 85% 20%, rgba(255,79,216,.16), transparent 60%);
+      pointer-events:none;
+      opacity:.95;
+      z-index:0;
+    }
+    .card::after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: linear-gradient(120deg,
+        transparent 0%,
+        rgba(255,255,255,.10) 35%,
+        transparent 60%
+      );
+      transform: translateX(-60%) rotate(8deg);
+      transition: transform .7s ease;
+      pointer-events:none;
+      z-index:1;
+      mix-blend-mode: overlay;
+    }
+    .card:hover::after{
+      transform: translateX(30%) rotate(8deg);
+    }
+
+    /* Liquid blob reveal */
+    .blob{
+      position:absolute;
+      inset:-30%;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,79,216,.95), rgba(255,79,216,.0) 55%),
+        radial-gradient(circle at 70% 65%, rgba(102,240,255,.9), rgba(102,240,255,.0) 55%),
+        radial-gradient(circle at 55% 35%, rgba(255,209,102,.7), rgba(255,209,102,.0) 58%);
+      filter: blur(20px);
+      opacity:.85;
+      transform: scale(.45);
+      transform-origin:center;
+      border-radius: 999px;
+      transition: transform .75s cubic-bezier(.2,.9,.15,1), opacity .75s ease;
+      z-index:0;
+      animation: blobWobble 8s ease-in-out infinite;
+    }
+    .card:hover .blob{
+      transform: scale(1.2);
+      opacity:.65;
+    }
+    @keyframes blobWobble{
+      0%,100%{transform: scale(.45) translate(0,0)}
+      50%{transform: scale(.52) translate(60px,-30px)}
+    }
+
+    /* Left content */
+    .content{
+      position:relative;
+      z-index:3;
+      width: 52%;
+      padding: clamp(18px, 3vw, 34px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap: 10px;
+      transform: translateX(18px);
+      opacity: 0;
+      transition: transform .7s cubic-bezier(.18,.9,.2,1), opacity .7s ease;
+    }
+
+    .card:hover .content{
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .badge{
+      width:max-content;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.20);
+      border:1px solid rgba(255,255,255,.16);
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing:.02em;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: radial-gradient(circle, var(--cyan), transparent 60%);
+      box-shadow: 0 0 18px rgba(102,240,255,.6);
+      position:relative;
+    }
+    .dot::after{
+      content:"";
+      position:absolute; inset:-4px;
+      border: 1px solid rgba(102,240,255,.35);
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{transform:scale(1);opacity:.6}
+      50%{transform:scale(1.6);opacity:.12}
+    }
+
+    h2{
+      font-size: clamp(36px, 4vw, 62px);
+      line-height: 1;
+      letter-spacing: -.02em;
+      text-shadow: 0 0 30px rgba(255,79,216,.2), 0 0 30px rgba(102,240,255,.14);
+    }
+    h3{
+      color: rgba(255,255,255,.82);
+      text-transform: uppercase;
+      letter-spacing: .22em;
+      font-weight: 650;
+      font-size: 13px;
+    }
+    p{
+      color: rgba(255,255,255,.76);
+      line-height: 1.7;
+      font-size: 14.5px;
+      max-width: 56ch;
+      margin-top: 6px;
+    }
+
+    /* Button */
+    .btn{
+      margin-top: 14px;
+      width:max-content;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 11px 16px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+      text-decoration:none;
+      font-weight: 700;
+      letter-spacing:.01em;
+      cursor:pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      -webkit-user-select:none;
+      user-select:none;
+      position:relative;
+      overflow:hidden;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.32);
+    }
+    .btn:active{transform: translateY(0) scale(.98)}
+    .btn .arrow{transition: transform .25s ease}
+    .btn:hover .arrow{transform: translateX(3px)}
+
+    .btn::after{
+      content:"";
+      position:absolute; inset:-60%;
+      background: linear-gradient(120deg,
+        transparent 0%,
+        rgba(255,255,255,.18) 35%,
+        transparent 55%
+      );
+      transform: translateX(-55%) rotate(10deg);
+      transition: transform .6s ease;
+      mix-blend-mode: overlay;
+      pointer-events:none;
+    }
+    .btn:hover::after{transform: translateX(40%) rotate(10deg)}
+
+    /* Right image */
+    .imagePane{
+      position:relative;
+      width:48%;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .imageFrame{
+      width: 86%;
+      height: 82%;
+      border-radius: 22px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.20);
+      box-shadow: 0 22px 70px rgba(0,0,0,.42);
+      transform: translateX(-10px) scale(.96);
+      opacity: .0;
+      transition: transform .75s cubic-bezier(.18,.9,.2,1), opacity .7s ease;
+      position:relative;
+    }
+    .card:hover .imageFrame{
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
+
+    .imageFrame img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      transform: scale(1.05);
+      transition: transform 1s ease, filter 1s ease;
+      filter: saturate(1.05) contrast(1.05);
+    }
+    .card:hover .imageFrame img{
+      transform: scale(1.14);
+      filter: saturate(1.18) contrast(1.12);
+    }
+
+    /* subtle vignette */
+    .imageFrame::after{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(circle at 30% 20%, transparent 35%, rgba(0,0,0,.35) 90%);
+      pointer-events:none;
+    }
+
+    /* Fullscreen transition overlay */
+    .transition{
+      position:fixed;
+      inset:0;
+      z-index:50;
+      pointer-events:none;
+      opacity:0;
+      transition: opacity .25s ease;
+    }
+    .transition.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .transition .veil{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 600px at 15% 20%, rgba(102,240,255,.25), transparent 55%),
+        radial-gradient(900px 600px at 85% 30%, rgba(255,79,216,.22), transparent 60%),
+        linear-gradient(120deg, rgba(7,5,19,.92), rgba(16,26,58,.92));
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+
+    .transition .portal{
+      position:absolute;
+      left:50%; top:50%;
+      width: 22px; height: 22px;
+      transform: translate(-50%,-50%);
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255,255,255,.9), rgba(255,255,255,0) 60%);
+      box-shadow:
+        0 0 60px rgba(102,240,255,.55),
+        0 0 80px rgba(255,79,216,.35);
+      animation: none;
+    }
+
+    .transition.show .portal{
+      animation: portalExpand 700ms cubic-bezier(.18,.9,.2,1) forwards;
+    }
+
+    @keyframes portalExpand{
+      0%{ transform: translate(-50%,-50%) scale(1); opacity:1 }
+      70%{ transform: translate(-50%,-50%) scale(40); opacity:1 }
+      100%{ transform: translate(-50%,-50%) scale(75); opacity:1 }
+    }
+
+    /* Transition spark particles */
+    .tSpark{
+      position:absolute;
+      width:6px; height:6px;
+      border-radius:50%;
+      background: radial-gradient(circle, rgba(255,255,255,.95), rgba(255,255,255,0) 60%);
+      filter: drop-shadow(0 0 16px rgba(255,209,102,.35));
+      opacity:.9;
+    }
+
+    /* Mobile: always show content slightly */
+    @media (max-width: 900px){
+      .card{flex-direction:column; height:auto}
+      .content, .imagePane{width:100%}
+      .imagePane{padding-bottom:18px}
+      .content{opacity:1; transform:none}
+      .imageFrame{opacity:1; transform:none; height: 320px}
+      .card:hover .content, .card:hover .imageFrame{transform:none}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .wash,.spark{animation:none!important}
+      .card,.btn,.content,.imageFrame{transition:none!important}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wash" aria-hidden="true"></div>
+
+  <!-- Background sparks -->
+  <div class="sparks" aria-hidden="true" id="sparks"></div>
+
+  <div class="card" id="card">
+    <div class="blob" aria-hidden="true"></div>
+
+    <div class="content">
+      <div class="badge"><span class="dot"></span></div>
+      <h2>Hello</h2>
+      <h3>For Thwe Thwe</h3>
+      <p>I have to show you something. Click the button below there’s a surprise waiting ✨</p>
+
+      <a class="btn" href="./index1.html" id="continueBtn">
+        Continue <span class="arrow">➜</span>
+      </a>
+    </div>
+
+    <div class="imagePane">
+      <div class="imageFrame">
+        <img src="./image/img3.jpg" alt="Photo">
+      </div>
+    </div>
+  </div>
+
+  <!-- Transition overlay -->
+  <div class="transition" id="transition">
+    <div class="veil"></div>
+    <div class="portal"></div>
+  </div>
+
+  <script>
+    // --- Create floating background sparks (lightweight) ---
+    const sparks = document.getElementById("sparks");
+    const sparkCount = 18; // keep small for performance
+    for (let i = 0; i < sparkCount; i++){
+      const s = document.createElement("div");
+      s.className = "spark";
+      s.style.left = (Math.random() * 100) + "vw";
+      s.style.animationDuration = (8 + Math.random() * 9) + "s";
+      s.style.animationDelay = (-Math.random() * 12) + "s";
+      s.style.opacity = (0.25 + Math.random() * 0.45).toFixed(2);
+      s.style.transform = `translateY(${(50 + Math.random()*60)}vh)`;
+      sparks.appendChild(s);
+    }
+
+    // --- 3D tilt on mouse move (advanced but efficient) ---
+    const card = document.getElementById("card");
+    let mx = 0, my = 0;
+
+    function lerp(a,b,t){ return a + (b-a)*t; }
+    let tx = 0, ty = 0;
+
+    window.addEventListener("mousemove", (e)=>{
+      mx = (e.clientX / window.innerWidth) * 2 - 1;  // -1..1
+      my = (e.clientY / window.innerHeight) * 2 - 1; // -1..1
+    }, { passive:true });
+
+    function tiltLoop(){
+      // smooth follow
+      tx = lerp(tx, my * -6, 0.06);
+      ty = lerp(ty, mx *  8, 0.06);
+      card.style.transform = `perspective(1100px) rotateX(${tx}deg) rotateY(${ty}deg)`;
+      requestAnimationFrame(tiltLoop);
+    }
+    tiltLoop();
+
+    // --- Advanced transition when clicking Continue ---
+    const btn = document.getElementById("continueBtn");
+    const transition = document.getElementById("transition");
+
+    function spawnTransitionSparks(x, y){
+      const count = 28; // not too many
+      for (let i=0; i<count; i++){
+        const p = document.createElement("div");
+        p.className = "tSpark";
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+        transition.appendChild(p);
+
+        const ang = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * 220;
+        const dx = Math.cos(ang) * dist;
+        const dy = Math.sin(ang) * dist;
+
+        p.animate([
+          { transform: "translate(0,0) scale(1)", opacity: 0.95 },
+          { transform: `translate(${dx}px, ${dy}px) scale(0.2)`, opacity: 0 }
+        ], {
+          duration: 520 + Math.random() * 420,
+          easing: "cubic-bezier(.2,.9,.2,1)",
+          fill: "forwards"
+        });
+
+        setTimeout(()=> p.remove(), 1100);
+      }
+    }
+
+    btn.addEventListener("click", (e)=>{
+      e.preventDefault();
+
+      // center transition on the button
+      const r = btn.getBoundingClientRect();
+      const x = r.left + r.width/2;
+      const y = r.top + r.height/2;
+
+      transition.classList.add("show");
+      spawnTransitionSparks(x, y);
+
+      // micro “shrink & lift” before leaving
+      card.animate([
+        { transform: card.style.transform || "none", filter:"brightness(1)", opacity: 1 },
+        { transform: "perspective(1100px) rotateX(0deg) rotateY(0deg) scale(.985)", filter:"brightness(1.08)", opacity: 1 },
+        { transform: "perspective(1100px) rotateX(0deg) rotateY(0deg) scale(.92)", filter:"brightness(1.15)", opacity: .55 }
+      ], {
+        duration: 520,
+        easing: "cubic-bezier(.2,.9,.2,1)",
+        fill: "forwards"
+      });
+
+      // navigate after transition
+      const href = btn.getAttribute("href");
+      setTimeout(()=> { window.location.href = href; }, 720);
+    });
+  </script>
+</body>
+</html>
